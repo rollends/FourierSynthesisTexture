@@ -1,0 +1,23 @@
+Fourier Synthesize Texture Application
+Author: Rollen D'Souza
+
+---------------------------------------------------
+
+This application performs basic timing and memory checks on the GPU for how well it performs 
+when using the Fourier Method to generate terrain height maps. Note the functions in this 
+program can be easily modified to generate height maps in a predictable manner using any given
+seed value. It requires the NVIDIA CUDA 5.0 SDK to build and requires an NVIDIA GPU of atleast
+compute capability 1.2 to execute.
+
+The Fourier Method involves:
+	1. Forward FFT (using cuFFT)
+	2. Applying a 'Pink Noise' Filter (using a CUDA Kernel)
+	3. Inverse FFT (using cuFFT)
+
+Here 'Pink Noise' is as defined on Wikipedia. The magnitude of a given frequency is inversely proportional
+to a power of that frequency. The best values for the power are around 2.5, although other values can be 
+used to customize the 'roughness' of the terrain.
+
+This method is described (along with an extension):
+http://www.student.math.uwaterloo.ca/~pmat370/PROJECTS/2006/Keith_Stanger_Fractal_Landscapes.pdf
+

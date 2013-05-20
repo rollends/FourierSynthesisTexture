@@ -23,7 +23,9 @@ __global__ void ExecuteFilterSymmetric(cuComplex* freqDomain, size_t width, size
 __global__ void GetMagnitudeSymmetric(cuComplex* input, float* output, size_t width, size_t height, size_t trueHeight);
 __global__ void CreateRandom2DTexture(float* texture, size_t width, size_t height, unsigned long long randomSeed);
 
-cudaError_t CreateFourierTextureFast(float* hostTexture, size_t texWidth, size_t texHeight, float* timeMSPerGeneration, float* totalTimeMS, size_t* usedBytes, int stepMax);
+cudaError_t CreateFourierTextureFast(float* hostTexture, size_t texWidth, size_t texHeight, 
+									 float* timeMSPerGeneration, float* totalTimeMS, size_t* usedBytes, 
+									 int stepMax, int minRndValue = 1, int maxRndValue = 100);
 void printCudaError(const char * const message, cudaError_t error);
 int getEncoderClsid(const WCHAR* format, CLSID* pClsid);
 
@@ -36,7 +38,7 @@ float ScaledNormalizeValue(float input, float min, float max)
 int main(int argc, char* argv[])
 {
     cudaError_t cudaStatus;
-	size_t width = 32;
+	size_t width = 512;
 	size_t height= 512;
 	float timeMS = 0;
 	float timeTotalMS = 0;
@@ -44,7 +46,7 @@ int main(int argc, char* argv[])
 	ULONG_PTR gdiplusToken;
 	GdiplusStartupInput gdiplusStartupInput;
 	CLSID  encoderID;
-	std::ofstream logData("C:\\Users\\Rollen\\Documents\\Report2B\\LogData.txt");
+	std::ofstream logData("LogData.txt");
 
 	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 	getEncoderClsid(L"image/bmp", &encoderID);
@@ -62,7 +64,7 @@ int main(int argc, char* argv[])
 			size_t length = width * height;
 			float* texture = (float*)malloc(sizeof(float)*length);
 			int stage = 3;
-			cudaStatus = CreateFourierTextureFast(texture, width, height, &timeMS, &timeTotalMS, &memoryUsage,stage);
+			cudaStatus = CreateFourierTextureFast(texture, width, height, &timeMS, &timeTotalMS, &memoryUsage,stage, 25, 25);
 			if(cudaStatus != cudaSuccess) 
 			{
 				cudaDeviceReset();
@@ -101,7 +103,7 @@ int main(int argc, char* argv[])
 		
 				std::stringstream ss;
 				std::string fileNameStr;
-				ss << "C:\\Users\\Rollen\\Documents\\Report2B\\Images\\FI_STEP" << stage << "_" << width << "_" << height << ".bmp";
+				ss << "FI_STEP" << stage << "_" << width << "_" << height << ".bmp";
 				ss >> fileNameStr;
 				WCHAR* fileName = (WCHAR*)malloc(sizeof(WCHAR)*(fileNameStr.length()+1));
 				memset(fileName, 0, sizeof(WCHAR)*(fileNameStr.length()+1));
@@ -137,7 +139,9 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-cudaError_t CreateFourierTextureFast(float* hostTexture, size_t texWidth, size_t texHeight, float* timeMSPerGeneration, float* totalTimeMS, size_t* usedBytes, int stepMax)
+cudaError_t CreateFourierTextureFast(float* hostTexture, size_t texWidth, size_t texHeight, 
+									 float* timeMSPerGeneration, float* totalTimeMS, size_t* usedBytes, 
+									 int stepMax, int minRndValue, int maxRndValue)
 {
 	cudaError_t cudaStatus = cudaSuccess;
 	cudaEvent_t cudaStartEvent;
@@ -183,7 +187,7 @@ cudaError_t CreateFourierTextureFast(float* hostTexture, size_t texWidth, size_t
 	int temp = 0;
 	float min = FLT_MAX;
 	float max = FLT_MIN;
-	for( unsigned int i = 1; i <= 100; i++ )
+	for( unsigned int i = minRndValue; i <= maxRndValue; i++ )
 	{
 		srand(i);
 		for( int x = 0; x < texWidth*texHeight; x++ ) 
